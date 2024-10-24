@@ -127,18 +127,15 @@ from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 
 
-def add_new(news_data):
-    """
-    add new to db
-    :param news_data: news info
-    :return:
-    """
+def add_new_to_db(news_data: dict)-> None:
+    def format_content(content_list: list) -> str:
+            return " ".join(content_list)
     session = Session()
     session.add(NewsArticle(
         url=news_data["url"],
         title=news_data["title"],
         time=news_data["time"],
-        content=" ".join(news_data["content"]),  # 將內容list轉換為字串
+        content=format_content(news_data["content"]), 
         summary=news_data["summary"],
         reason=news_data["reason"],
     ))
@@ -240,7 +237,7 @@ def get_new(is_initial=False):
             result = json.loads(result)
             detailed_news["summary"] = result["影響"]
             detailed_news["reason"] = result["原因"]
-            add_new(detailed_news)
+            add_new_to_db(detailed_news)
 
 
 @app.on_event("startup")
