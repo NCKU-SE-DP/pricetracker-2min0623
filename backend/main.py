@@ -319,6 +319,10 @@ class UserAuthSchema(BaseModel):
     password: str
 @app.post("/api/v1/users/register")
 def register_user(user: UserAuthSchema, db: Session = Depends(session_opener)):
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already taken.")
+    
     hashed_password = pwd_context.hash(user.password)
     db_user = User(username=user.username, hashed_password=hashed_password)
     db.add(db_user)
