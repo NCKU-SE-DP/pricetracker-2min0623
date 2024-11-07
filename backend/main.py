@@ -318,8 +318,7 @@ class UserAuthSchema(BaseModel):
     username: str
     password: str
 @app.post("/api/v1/users/register")
-def create_user(user: UserAuthSchema, db: Session = Depends(session_opener)):
-    """create user"""
+def register_user(user: UserAuthSchema, db: Session = Depends(session_opener)):
     hashed_password = pwd_context.hash(user.password)
     db_user = User(username=user.username, hashed_password=hashed_password)
     db.add(db_user)
