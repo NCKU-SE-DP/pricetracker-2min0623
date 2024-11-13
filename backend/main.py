@@ -142,40 +142,28 @@ def add_new_to_db(news_data: dict, session: Session) -> None:
     except Exception as e:
         logging.error(f"Error adding news to database: {e}")
 
-def get_new_info(search_term, is_initial=False):
-    """
-    get new
+def fetch_news_page(search_term: str, page: int) -> list:
+    """根據搜尋詞和頁碼獲取新聞數據。"""
+    params = {
+        "page": page,
+        "id": f"search:{quote(search_term)}",
+        "channelId": 2,
+        "type": "searchword",
+    }
+    response = requests.get("https://udn.com/api/more", params=params)
+    return response.json().get("lists", [])
 
-    :param search_term:
-    :param is_initial:
-    :return:
-    """
+def get_new_info(search_term: str, is_initial: bool = False) -> list:
+    """根據搜尋詞從 API 獲取新聞數據。"""
     all_news_data = []
-    # iterate pages to get more news data, not actually get all news data
+
     if is_initial:
-        a = []
-        for p in range(1, 10):
-            p2 = {
-                "page": p,
-                "id": f"search:{quote(search_term)}",
-                "channelId": 2,
-                "type": "searchword",
-            }
-            response = requests.get("https://udn.com/api/more", params=p2)
-            a.append(response.json()["lists"])
-
-        for l in a:
-            all_news_data.append(l)
+        news_pages = [fetch_news_page(search_term, page) for page in range(1, 10)]
+        for page_data in news_pages:
+            all_news_data.extend(page_data)
     else:
-        p = {
-            "page": 1,
-            "id": f"search:{quote(search_term)}",
-            "channelId": 2,
-            "type": "searchword",
-        }
-        response = requests.get("https://udn.com/api/more", params=p)
+        all_news_data = fetch_news_page(search_term, 1)
 
-        all_news_data = response.json()["lists"]
     return all_news_data
 
 def get_new(is_initial=False):
