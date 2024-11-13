@@ -166,64 +166,54 @@ def get_new_info(search_term: str, is_initial: bool = False) -> list:
 
     return all_news_data
 
-def get_new(is_initial=False):
-    """
-    get new info
+def evaluate_relevance(title: str) -> str:
+    """使用 AI 模型評估新聞標題的相關性。"""
+    messages = [
+        {
+            "role": "system",
+            "content": "你是一個關聯度評估機器人，請評估新聞標題是否與「民生用品的價格變化」相關，並給予 'high'、'medium'、'low' 評價。",
+        },
+        {"role": "user", "content": title},
+    ]
+    ai = OpenAI(api_key="xxx").chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+    )
+    return ai.choices[0].message.content
 
-    :param is_initial:
-    :return:
-    """
+def fetch_detailed_news_content(url: str) -> dict:
+    """抓取並解析新聞網頁的詳細內容。"""
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, "html.parser")
+    title = soup.find("h1", class_="article-content__title").text
+    time = soup.find("time", class_="article-content__time").text
+    content_section = soup.find("section", class_="article-content__editor")
+    paragraphs = [p.text for p in content_section.find_all("p") if p.text.strip() != "" and "▪" not in p.text]
+    return {"url": url, "title": title, "time": time, "content": paragraphs}
+
+def generate_summary(content: str) -> dict:
+    """使用 AI 模型生成新聞摘要。"""
+    messages = [
+        {
+            "role": "system",
+            "content": "你是一個新聞摘要生成機器人，請統整新聞中的影響及原因（各 50 字，JSON 格式）。",
+        },
+        {"role": "user", "content": content},
+    ]
+    completion = OpenAI(api_key="xxx").chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+    )
+    return json.loads(completion.choices[0].message.content)
+
+def get_new(is_initial=False):
+    """獲取並存儲新聞數據。"""
     news_data = get_new_info("價格", is_initial=is_initial)
     for news in news_data:
-        title = news["title"]
-        m = [
-            {
-                "role": "system",
-                "content": "你是一個關聯度評估機器人，請評估新聞標題是否與「民生用品的價格變化」相關，並給予'high'、'medium'、'low'評價。(僅需回答'high'、'medium'、'low'三個詞之一)",
-            },
-            {"role": "user", "content": f"{title}"},
-        ]
-        ai = OpenAI(api_key="xxx").chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=m,
-        )
-        relevance = ai.choices[0].message.content
-        if relevance == "high":
-            response = requests.get(news["titleLink"])
-            soup = BeautifulSoup(response.text, "html.parser")
-            # 標題
-            title = soup.find("h1", class_="article-content__title").text
-            time = soup.find("time", class_="article-content__time").text
-            # 定位到包含文章内容的 <section>
-            content_section = soup.find("section", class_="article-content__editor")
-
-            paragraphs = [
-                p.text
-                for p in content_section.find_all("p")
-                if p.text.strip() != "" and "▪" not in p.text
-            ]
-            detailed_news =  {
-                "url": news["titleLink"],
-                "title": title,
-                "time": time,
-                "content": paragraphs,
-            }
-            m = [
-                {
-                    "role": "system",
-                    "content": "你是一個新聞摘要生成機器人，請統整新聞中提及的影響及主要原因 (影響、原因各50個字，請以json格式回答 {'影響': '...', '原因': '...'})",
-                },
-                {"role": "user", "content": " ".join(detailed_news["content"])},
-            ]
-
-            completion = OpenAI(api_key="xxx").chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=m,
-            )
-            result = completion.choices[0].message.content
-            result = json.loads(result)
-            detailed_news["summary"] = result["影響"]
-            detailed_news["reason"] = result["原因"]
+        if evaluate_relevance(news["title"]) == "high":
+            detailed_news = fetch_detailed_news_content(news["titleLink"])
+            summary = generate_summary(" ".join(detailed_news["content"]))
+            detailed_news.update({"summary": summary["影響"], "reason": summary["原因"]})
             add_new_to_db(detailed_news)
 
 
