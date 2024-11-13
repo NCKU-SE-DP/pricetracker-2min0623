@@ -123,23 +123,24 @@ from bs4 import BeautifulSoup
 from sqlalchemy.orm import Session
 
 
-def add_new_to_db(news_data: dict)-> None:
-    def format_content(content_list: list) -> str:
-            return " ".join(content_list)
+def format_content(content_list: list) -> str:
+    """將內容列表格式化為字符串。"""
+    return " ".join(content_list)
+
+def add_new_to_db(news_data: dict, session: Session) -> None:
     try:
-        with Session() as session:
-            new_article = NewsArticle(
-                url=news_data["url"],
-                title=news_data["title"],
-                time=news_data["time"],
-                content=format_content(news_data["content"]),
-                summary=news_data["summary"],
-                reason=news_data["reason"],
-            )
-            session.add(new_article)
-            session.commit()
+        new_article = NewsArticle(
+            url=news_data["url"],
+            title=news_data["title"],
+            time=news_data["time"],
+            content=format_content(news_data["content"]),
+            summary=news_data["summary"],
+            reason=news_data["reason"],
+        )
+        session.add(new_article)
+        session.commit()
     except Exception as e:
-        print(f"Error adding news to database: {e}")
+        logging.error(f"Error adding news to database: {e}")
 
 def get_new_info(search_term, is_initial=False):
     """
