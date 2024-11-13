@@ -1,24 +1,20 @@
-import json
-import sentry_sdk
-from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi.middleware.cors import CORSMiddleware
 import itertools
-from sqlalchemy import delete, insert, select
-from sqlalchemy.orm import Session, sessionmaker
-from typing import List, Optional
-import requests
-from fastapi import APIRouter, HTTPException, Query, Depends, status, FastAPI
+import json
 import os
 from datetime import datetime, timedelta
+
+import requests
+import sentry_sdk
+from apscheduler.schedulers.background import BackgroundScheduler
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-
-from pydantic import BaseModel, Field, AnyHttpUrl
-from sqlalchemy import (Column, ForeignKey, Integer, String, Table, Text,
-                        create_engine)
+from pydantic import AnyHttpUrl, BaseModel, Field
+from sqlalchemy import Column, ForeignKey, Integer, String, Table, Text, create_engine, delete, insert, select
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import Session, relationship, sessionmaker
 
 Base = declarative_base()
 
