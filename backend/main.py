@@ -264,16 +264,16 @@ def authenticate_user_token(
     return db.query(User).filter(User.username == payload.get("sub")).first()
 
 
+SECRET_KEY = '1892dhianiandowqd0n'
+ALGORITHM = "HS256"
+
 def create_access_token(data, expires_delta=None):
-    """create access token"""
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+    expire = datetime.utcnow() + expires_delta if expires_delta else datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    print(to_encode)
-    encoded_jwt = jwt.encode(to_encode, '1892dhianiandowqd0n', algorithm="HS256")
+    
+    # 使用變數生成 JWT
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
