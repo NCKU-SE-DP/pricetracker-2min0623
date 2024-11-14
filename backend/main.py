@@ -236,7 +236,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/login")
 
 
-def session_opener():
+def get_session():
     session = Session(bind=engine)
     try:
         yield session
@@ -258,7 +258,7 @@ def authenticate_user(db, username, password):
 
 def authenticate_user_token(
     token = Depends(oauth2_scheme),
-    db = Depends(session_opener)
+    db = Depends(get_session)
 ):
     payload = jwt.decode(token, '1892dhianiandowqd0n', algorithms=["HS256"])
     return db.query(User).filter(User.username == payload.get("sub")).first()
@@ -279,7 +279,7 @@ def create_access_token(data, expires_delta=None):
 
 @app.post("/api/v1/users/login")
 async def login_for_access_token(
-        form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(session_opener)
+        form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_session)
 ):
     """login"""
     user = authenticate_user(db, form_data.username, form_data.password)
@@ -292,7 +292,7 @@ class UserAuthSchema(BaseModel):
     username: str
     password: str
 @app.post("/api/v1/users/register")
-def register_user(user: UserAuthSchema, db: Session = Depends(session_opener)):
+def register_user(user: UserAuthSchema, db: Session = Depends(get_session)):
     existing_user = db.query(User).filter(User.username == user.username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already taken.")
@@ -331,7 +331,7 @@ def get_article_upvote_details(article_id, uid, db):
 
 
 @app.get("/api/v1/news/news")
-def read_news(db=Depends(session_opener)):
+def read_news(db=Depends(get_session)):
     """
     read new
 
@@ -352,7 +352,7 @@ def read_news(db=Depends(session_opener)):
     "/api/v1/news/user_news"
 )
 def read_user_news(
-        db=Depends(session_opener),
+        db=Depends(get_session),
         u=Depends(authenticate_user_token)
 ):
     """
@@ -456,7 +456,7 @@ async def news_summary(
 @app.post("/api/v1/news/{id}/upvote")
 def upvote_article(
         id,
-        db=Depends(session_opener),
+        db=Depends(get_session),
         u=Depends(authenticate_user_token),
 ):
     message = toggle_upvote(id, u.id, db)
