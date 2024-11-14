@@ -219,11 +219,10 @@ def fetch_and_store_news_data(is_initial=False):
 
 @app.on_event("startup")
 def start_scheduler():
-    db = SessionLocal()
-    if db.query(NewsArticle).count() == 0:
-        # should change into simple factory pattern
-        fetch_and_store_news_data()
-    db.close()
+    with SessionLocal() as db:
+        if db.query(NewsArticle).count() == 0:
+            fetch_and_store_news_data()
+    
     bgs.add_job(fetch_and_store_news_data, "interval", minutes=100)
     bgs.start()
 
