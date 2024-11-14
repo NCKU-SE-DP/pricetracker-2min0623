@@ -346,32 +346,23 @@ def read_news(db=Depends(get_session)):
     return articles_with_upvotes
 
 
-@app.get(
-    "/api/v1/news/user_news"
-)
+@app.get("/api/v1/news/user_news")
 def read_user_news(
-        db=Depends(get_session),
-        u=Depends(authenticate_user_token)
+        db_session=Depends(get_session),
+        current_user=Depends(authenticate_user_token)
 ):
-    """
-    read user new
-
-    :param db:
-    :param u:
-    :return:
-    """
-    news = db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
-    result = []
-    for article in news:
-        upvotes, upvoted = get_article_upvote_details(article.id, u.id, db)
-        result.append(
+    news_articles = db_session.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
+    articles_with_upvotes = []
+    for article in news_articles:
+        upvotes, is_upvoted = get_article_upvote_details(article.id, current_user.id, db_session)
+        articles_with_upvotes.append(
             {
                 **article.__dict__,
                 "upvotes": upvotes,
-                "is_upvoted": upvoted,
+                "is_upvoted": is_upvoted,
             }
         )
-    return result
+    return articles_with_upvotes
 
 class PromptRequest(BaseModel):
     prompt: str
