@@ -487,9 +487,10 @@ def news_exists(article_id: int, db_session: Session) -> bool:
 
 @app.get("/api/v1/prices/necessities-price")
 def get_necessities_prices(
-        category=Query(None), commodity=Query(None)
-):
+        category_name: Optional[str] = Query(None),
+        commodity_name: Optional[str] = Query(None),
+) -> dict:
     return requests.get(
         "https://opendata.ey.gov.tw/api/ConsumerProtection/NecessitiesPrice",
-        params={"CategoryName": category, "Name": commodity},
+        params={"CategoryName": category_name, "Name": commodity_name},
     ).json()
