@@ -249,9 +249,9 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def authenticate_user(db, username, password):
-    user = db.query(User).filter(User.username == username).first()
-    if not verify(password, user.hashed_password):
+def authenticate_user(db_session, username, password):
+    user = db_session.query(User).filter(User.username == username).first()
+    if user is None or not verify_password(password, user.hashed_password):
         return False
     return user
 
