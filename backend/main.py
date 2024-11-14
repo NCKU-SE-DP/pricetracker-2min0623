@@ -124,7 +124,6 @@ from sqlalchemy.orm import Session
 
 
 def format_content(content_list: list) -> str:
-    """將內容列表格式化為字符串。"""
     return " ".join(content_list)
 
 def add_new_to_db(news_data: dict, session: Session) -> None:
@@ -143,7 +142,6 @@ def add_new_to_db(news_data: dict, session: Session) -> None:
         logging.error(f"Error adding news to database: {e}")
 
 def fetch_news_page(search_term: str, page: int) -> list:
-    """根據搜尋詞和頁碼獲取新聞數據。"""
     params = {
         "page": page,
         "id": f"search:{quote(search_term)}",
@@ -154,7 +152,6 @@ def fetch_news_page(search_term: str, page: int) -> list:
     return response.json().get("lists", [])
 
 def get_new_info(search_term: str, is_initial: bool = False) -> list:
-    """根據搜尋詞從 API 獲取新聞數據。"""
     all_news_data = []
 
     if is_initial:
@@ -272,7 +269,6 @@ def create_access_token(data, expires_delta=None):
     expire = datetime.utcnow() + expires_delta if expires_delta else datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     
-    # 使用變數生成 JWT
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
