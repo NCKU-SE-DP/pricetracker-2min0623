@@ -449,28 +449,36 @@ def upvote_article(
     return {"message": message}
 
 
-def toggle_upvote(n_id, u_id, db):
-    existing_upvote = db.execute(
+def check_upvote_exists(article_id, user_id, db_session):
+    """檢查用戶是否已對文章點贊"""
+    return db_session.execute(
         select(user_news_association_table).where(
-            user_news_association_table.c.news_articles_id == n_id,
-            user_news_association_table.c.user_id == u_id,
+            user_news_association_table.c.news_articles_id == article_id,
+            user_news_association_table.c.user_id == user_id,
         )
-    ).scalar()
+    ).scalar() is not None
 
-    if existing_upvote:
-        delete_stmt = delete(user_news_association_table).where(
-            user_news_association_table.c.news_articles_id == n_id,
-            user_news_association_table.c.user_id == u_id,
-        )
-        db.execute(delete_stmt)
-        db.commit()
+def remove_upvote(article_id, user_id, db_session):
+    delete_stmt = delete(user_news_association_table).where(
+        user_news_association_table.c.news_articles_id == article_id,
+        user_news_association_table.c.user_id == user_id,
+    )
+    db_session.execute(delete_stmt)
+    db_session.commit()
+
+def add_upvote(article_id, user_id, db_session):
+    insert_stmt = insert(user_news_association_table).values(
+        news_articles_id=article_id, user_id=user_id
+    )
+    db_session.execute(insert_stmt)
+    db_session.commit()
+
+def toggle_upvote(article_id, user_id, db_session):
+    if check_upvote_exists(article_id, user_id, db_session):
+        remove_upvote(article_id, user_id, db_session)
         return "Upvote removed"
     else:
-        insert_stmt = insert(user_news_association_table).values(
-            news_articles_id=n_id, user_id=u_id
-        )
-        db.execute(insert_stmt)
-        db.commit()
+        add_upvote(article_id, user_id, db_session)
         return "Article upvoted"
 
 
