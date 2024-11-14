@@ -450,7 +450,6 @@ def upvote_article(
 
 
 def check_upvote_exists(article_id, user_id, db_session):
-    """檢查用戶是否已對文章點贊"""
     return db_session.execute(
         select(user_news_association_table).where(
             user_news_association_table.c.news_articles_id == article_id,
@@ -482,8 +481,8 @@ def toggle_upvote(article_id, user_id, db_session):
         return "Article upvoted"
 
 
-def news_exists(id2, db: Session):
-    return db.query(NewsArticle).filter_by(id=id2).first() is not None
+def news_exists(article_id: int, db_session: Session) -> bool:
+    return db_session.query(NewsArticle).filter_by(id=article_id).first() is not None
 
 
 @app.get("/api/v1/prices/necessities-price")
