@@ -439,13 +439,13 @@ async def news_summary(
     return summary_response
 
 
-@app.post("/api/v1/news/{id}/upvote")
+@app.post("/api/v1/news/{article_id}/upvote")
 def upvote_article(
-        id,
-        db=Depends(get_session),
-        u=Depends(authenticate_user_token),
+        article_id: int,
+        db_session=Depends(get_session),
+        current_user=Depends(authenticate_user_token),
 ):
-    message = toggle_upvote(id, u.id, db)
+    message = toggle_upvote(article_id, current_user.id, db_session)
     return {"message": message}
 
 
