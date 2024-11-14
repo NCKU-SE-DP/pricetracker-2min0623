@@ -336,14 +336,14 @@ def read_news(db=Depends(get_session)):
     :param db:
     :return:
     """
-    news = db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
-    result = []
-    for n in news:
-        upvotes, upvoted = get_article_upvote_details(n.id, None, db)
-        result.append(
-            {**n.__dict__, "upvotes": upvotes, "is_upvoted": upvoted}
+    news_articles = db_session.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
+    articles_with_upvotes = []
+    for article in news_articles:
+        upvotes, is_upvoted = get_article_upvote_details(article.id, None, db_session)
+        articles_with_upvotes.append(
+            {**article.__dict__, "upvotes": upvotes, "is_upvoted": is_upvoted}
         )
-    return result
+    return articles_with_upvotes
 
 
 @app.get(
