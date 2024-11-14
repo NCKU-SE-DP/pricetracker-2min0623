@@ -309,21 +309,23 @@ def read_users_me(user=Depends(authenticate_user_token)):
 _id_counter = itertools.count(start=1000000)
 
 
-def get_article_upvote_details(article_id, uid, db):
-    cnt = (
+def get_article_upvote_details(article_id: int, uid: int, db: Session) -> tuple[int, bool]:
+    upvote_count = (
         db.query(user_news_association_table)
         .filter_by(news_articles_id=article_id)
         .count()
     )
-    voted = False
+    
+    user_voted = False
     if uid:
-        voted = (
-                db.query(user_news_association_table)
-                .filter_by(news_articles_id=article_id, user_id=uid)
-                .first()
-                is not None
+        user_voted = (
+            db.query(user_news_association_table)
+            .filter_by(news_articles_id=article_id, user_id=uid)
+            .first()
+            is not None
         )
-    return cnt, voted
+        
+    return upvote_count, user_voted
 
 
 @app.get("/api/v1/news/news")
