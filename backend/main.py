@@ -206,7 +206,7 @@ def generate_summary(content: str) -> dict:
     )
     return json.loads(completion.choices[0].message.content)
 
-def get_new(is_initial=False):
+def fetch_and_store_news_data(is_initial=False):
     """獲取並存儲新聞數據。"""
     news_data = get_new_info("價格", is_initial=is_initial)
     for news in news_data:
@@ -222,9 +222,9 @@ def start_scheduler():
     db = SessionLocal()
     if db.query(NewsArticle).count() == 0:
         # should change into simple factory pattern
-        get_new()
+        fetch_and_store_news_data()
     db.close()
-    bgs.add_job(get_new, "interval", minutes=100)
+    bgs.add_job(fetch_and_store_news_data, "interval", minutes=100)
     bgs.start()
 
 
